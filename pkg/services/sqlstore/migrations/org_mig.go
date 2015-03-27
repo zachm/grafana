@@ -68,4 +68,5 @@ func addOrgMigrations(mg *Migrator) {
 
 	mg.AddMigration("Drop old table account", NewDropTableMigration("account"))
 	mg.AddMigration("Drop old table account_user", NewDropTableMigration("account_user"))
+
 }

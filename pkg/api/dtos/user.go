@@ -27,3 +27,7 @@ type AdminUserListItem struct {
 	Login          string `json:"login"`
 	IsGrafanaAdmin bool   `json:"isGrafanaAdmin"`
 }
+
+type UpdatePreferencesForm struct {
+	Prefrences map[string]interface{} `json:"preferences"`
+}

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/grafana/grafana/pkg/api/dtos"
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/middleware"
 	m "github.com/grafana/grafana/pkg/models"
@@ -114,4 +115,12 @@ func ChangeUserPassword(c *middleware.Context, cmd m.ChangeUserPasswordCommand) 
 	}
 
 	c.JsonOK("User password changed")
+}
+
+func UpdateUserPreferences(c *middleware.Context, form dtos.UpdatePreferencesForm) {
+	prefs = make([]*m.Preference, 0)
+
+	for key, value := range form.Preferences {
+
+	}
 }

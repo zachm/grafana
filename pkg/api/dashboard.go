@@ -97,6 +97,8 @@ func PostDashboard(c *middleware.Context, cmd m.SaveDashboardCommand) {
 }
 
 func GetHomeDashboard(c *middleware.Context) {
+  configQuer := m.ConfigQuery{OrgId: c.OrgId, UserId: c.UserId Key: m.PREF_KEY_HOME_DASHBOARD }
+
 	filePath := path.Join(setting.StaticRootPath, "dashboards/home.json")
 	file, err := os.Open(filePath)
 	if err != nil {
