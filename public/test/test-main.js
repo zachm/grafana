@@ -2,6 +2,7 @@ require.config({
   baseUrl: 'http://localhost:9876/base/public/app',
 
   paths: {
+    text:                  '../vendor/require/text',
     specs:                 '../test/specs',
     mocks:                 '../test/mocks',
     helpers:               '../test/specs/helpers',
@@ -139,6 +140,9 @@ require([
     'specs/kbn-format-specs',
     'specs/dashboardSrv-specs',
     'specs/dashboardViewStateSrv-specs',
+    'specs/soloPanelCtrl-specs',
+    'specs/table-specs',
+    'specs/table-ctrl-specs',
     'specs/singlestat-specs',
     'specs/dynamicDashboardSrv-specs',
     'specs/unsavedChangesSrv-specs',
