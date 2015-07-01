@@ -79,7 +79,6 @@ var (
 	AllowUserOrgCreate bool
 	AutoAssignOrg      bool
 	AutoAssignOrgRole  string
-	ViewerRoleMode     string
 
 	// Http auth
 	AdminUser     string
@@ -94,6 +93,9 @@ var (
 	AuthProxyHeaderName     string
 	AuthProxyHeaderProperty string
 	AuthProxyAutoSignUp     bool
+
+	// Basic Auth
+	BasicAuthEnabled bool
 
 	// Session settings.
 	SessionOptions session.Options
@@ -386,7 +388,6 @@ func NewConfigContext(args *CommandLineArgs) {
 	AllowUserOrgCreate = users.Key("allow_org_create").MustBool(true)
 	AutoAssignOrg = users.Key("auto_assign_org").MustBool(true)
 	AutoAssignOrgRole = users.Key("auto_assign_org_role").In("Editor", []string{"Editor", "Admin", "Viewer"})
-	ViewerRoleMode = users.Key("viewer_role_mode").In("default", []string{"default", "strinct"})
 
 	// anonymous access
 	AnonymousEnabled = Cfg.Section("auth.anonymous").Key("enabled").MustBool(false)
@@ -399,6 +400,9 @@ func NewConfigContext(args *CommandLineArgs) {
 	AuthProxyHeaderName = authProxy.Key("header_name").String()
 	AuthProxyHeaderProperty = authProxy.Key("header_property").String()
 	AuthProxyAutoSignUp = authProxy.Key("auto_sign_up").MustBool(true)
+
+	authBasic := Cfg.Section("auth.basic")
+	BasicAuthEnabled = authBasic.Key("enabled").MustBool(true)
 
 	// PhantomJS rendering
 	ImagesDir = filepath.Join(DataPath, "png")
