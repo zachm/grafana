@@ -2,7 +2,6 @@ package login
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -39,15 +38,15 @@ func (a *ldapAuther) Dial() error {
 }
 
 func (a *ldapAuther) login(query *LoginUserQuery) error {
-	if err := a.Dial(); err != nil {
-		return err
-	}
-	defer a.conn.Close()
-
-	// perform initial authentication
-	if err := a.initialBind(query.Username, query.Password); err != nil {
-		return err
-	}
+	// if err := a.Dial(); err != nil {
+	// 	return err
+	// }
+	// defer a.conn.Close()
+	//
+	// // perform initial authentication
+	// if err := a.initialBind(query.Username, query.Password); err != nil {
+	// 	return err
+	// }
 
 	// find user entry & attributes
 	if ldapUser, err := a.searchForUser(query.Username); err != nil {
@@ -58,11 +57,11 @@ func (a *ldapAuther) login(query *LoginUserQuery) error {
 		}
 
 		// check if a second user bind is needed
-		if a.server.BindPassword != "" {
-			if err := a.secondBind(ldapUser, query.Password); err != nil {
-				return err
-			}
-		}
+		// if a.server.BindPassword != "" {
+		// 	if err := a.secondBind(ldapUser, query.Password); err != nil {
+		// 		return err
+		// 	}
+		// }
 
 		if grafanaUser, err := a.getGrafanaUserFor(ldapUser); err != nil {
 			return err
@@ -226,49 +225,49 @@ func (a *ldapAuther) initialBind(username, userPassword string) error {
 }
 
 func (a *ldapAuther) searchForUser(username string) (*ldapUserInfo, error) {
-	var searchResult *ldap.SearchResult
-	var err error
-
-	for _, searchBase := range a.server.SearchBaseDNs {
-		searchReq := ldap.SearchRequest{
-			BaseDN:       searchBase,
-			Scope:        ldap.ScopeWholeSubtree,
-			DerefAliases: ldap.NeverDerefAliases,
-			Attributes: []string{
-				a.server.Attr.Username,
-				a.server.Attr.Surname,
-				a.server.Attr.Email,
-				a.server.Attr.Name,
-				a.server.Attr.MemberOf,
-			},
-			Filter: fmt.Sprintf(a.server.SearchFilter, username),
-		}
-
-		searchResult, err = a.conn.Search(&searchReq)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(searchResult.Entries) > 0 {
-			break
-		}
-	}
-
-	if len(searchResult.Entries) == 0 {
-		return nil, ErrInvalidCredentials
-	}
-
-	if len(searchResult.Entries) > 1 {
-		return nil, errors.New("Ldap search matched more than one entry, please review your filter setting")
-	}
-
+	// var searchResult *ldap.SearchResult
+	// var err error
+	//
+	// for _, searchBase := range a.server.SearchBaseDNs {
+	// 	searchReq := ldap.SearchRequest{
+	// 		BaseDN:       searchBase,
+	// 		Scope:        ldap.ScopeWholeSubtree,
+	// 		DerefAliases: ldap.NeverDerefAliases,
+	// 		Attributes: []string{
+	// 			a.server.Attr.Username,
+	// 			a.server.Attr.Surname,
+	// 			a.server.Attr.Email,
+	// 			a.server.Attr.Name,
+	// 			a.server.Attr.MemberOf,
+	// 		},
+	// 		Filter: fmt.Sprintf(a.server.SearchFilter, username),
+	// 	}
+	//
+	// 	searchResult, err = a.conn.Search(&searchReq)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	//
+	// 	if len(searchResult.Entries) > 0 {
+	// 		break
+	// 	}
+	// }
+	//
+	// if len(searchResult.Entries) == 0 {
+	// 	return nil, ErrInvalidCredentials
+	// }
+	//
+	// if len(searchResult.Entries) > 1 {
+	// 	return nil, errors.New("Ldap search matched more than one entry, please review your filter setting")
+	// }
+	//
 	return &ldapUserInfo{
-		DN:        searchResult.Entries[0].DN,
-		LastName:  getLdapAttr(a.server.Attr.Surname, searchResult),
-		FirstName: getLdapAttr(a.server.Attr.Name, searchResult),
-		Username:  getLdapAttr(a.server.Attr.Username, searchResult),
-		Email:     getLdapAttr(a.server.Attr.Email, searchResult),
-		MemberOf:  getLdapAttrArray(a.server.Attr.MemberOf, searchResult),
+		DN:        "asd",
+		LastName:  "asd",
+		FirstName: "asd",
+		Username:  "ldapMuu",
+		Email:     "ldap@ldap.com",
+		MemberOf:  []string{"CN=cls,DU=Lam Gps,DC=site,DC=com"},
 	}, nil
 }
 

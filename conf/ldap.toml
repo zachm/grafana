@@ -29,18 +29,31 @@ username = "cn"
 member_of = "memberOf"
 email =  "email"
 
-# Map ldap groups to grafana org roles
-[[servers.group_mappings]]
-group_dn = "cn=admins,dc=grafana,dc=org"
-org_role = "Admin"
-# The Grafana organization database id, optional, if left out the default org (id 1) will be used
-# org_id = 1
+# # Map ldap groups to grafana org roles
+# [[servers.group_mappings]]
+# group_dn = "cn=admins,dc=grafana,dc=org"
+# org_role = "Admin"
+# # The Grafana organization database id, optional, if left out the default org (id 1) will be used
+# # org_id = 1
+#
+# [[servers.group_mappings]]
+# group_dn = "cn=users,dc=grafana,dc=org"
+# org_role = "Editor"
+#
+# [[servers.group_mappings]]
+# # If you want to match all (or no ldap groups) then you can use wildcard
+# group_dn = "*"
+# org_role = "Viewer"
+#
 
 [[servers.group_mappings]]
-group_dn = "cn=users,dc=grafana,dc=org"
+group_dn = "CN=cls-admin,DU=Lam Gps,DC=site,DC=com"
+org_role = "Admin"
+
+[[servers.group_mappings]]
+group_dn = "CN=cls,DU=Lam Gps,DC=site,DC=com"
 org_role = "Editor"
 
 [[servers.group_mappings]]
-# If you want to match all (or no ldap groups) then you can use wildcard
 group_dn = "*"
 org_role = "Viewer"
