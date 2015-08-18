@@ -5,7 +5,6 @@ import (
 
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/events"
-	"github.com/grafana/grafana/pkg/log"
 	m "github.com/grafana/grafana/pkg/models"
 )
 
@@ -14,12 +13,23 @@ func init() {
 	bus.AddHandler("sql", CreateOrg)
 	bus.AddHandler("sql", UpdateOrg)
 	bus.AddHandler("sql", GetOrgByName)
-	bus.AddHandler("sql", GetOrgList)
+	bus.AddHandler("sql", SearchOrgs)
 	bus.AddHandler("sql", DeleteOrg)
 }
 
-func GetOrgList(query *m.GetOrgListQuery) error {
-	return x.Find(&query.Result)
+func SearchOrgs(query *m.SearchOrgsQuery) error {
+	query.Result = make([]*m.OrgDTO, 0)
+	sess := x.Table("org")
+	if query.Query != "" {
+		sess.Where("name LIKE ?", query.Query+"%")
+	}
+	if query.Name != "" {
+		sess.Where("name=?", query.Name)
+	}
+	sess.Limit(query.Limit, query.Limit*query.Page)
+	sess.Cols("id", "name")
+	err := sess.Find(&query.Result)
+	return err
 }
 
 func GetOrgById(query *m.GetOrgByIdQuery) error {
@@ -112,17 +122,17 @@ func DeleteOrg(cmd *m.DeleteOrgCommand) error {
 	return inTransaction2(func(sess *session) error {
 
 		deletes := []string{
-			"DELETE FROM star WHERE EXISTS (SELECT 1 FROM dashboard WHERE org_id = ?)",
-			"DELETE FROM dashboard_tag WHERE EXISTS (SELECT 1 FROM dashboard WHERE org_id = ?)",
+			"DELETE FROM star WHERE EXISTS (SELECT 1 FROM dashboard WHERE org_id = ? AND star.dashboard_id = dashboard.id)",
+			"DELETE FROM dashboard_tag WHERE EXISTS (SELECT 1 FROM dashboard WHERE org_id = ? AND dashboard_tag.dashboard_id = dashboard.id)",
 			"DELETE FROM dashboard WHERE org_id = ?",
 			"DELETE FROM api_key WHERE org_id = ?",
 			"DELETE FROM data_source WHERE org_id = ?",
 			"DELETE FROM org_user WHERE org_id = ?",
 			"DELETE FROM org WHERE id = ?",
+			"DELETE FROM temp_user WHERE org_id = ?",
 		}
 
 		for _, sql := range deletes {
-			log.Trace(sql)
 			_, err := sess.Exec(sql, cmd.Id)
 			if err != nil {
 				return err

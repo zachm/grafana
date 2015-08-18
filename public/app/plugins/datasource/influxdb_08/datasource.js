@@ -4,6 +4,7 @@ define([
   'kbn',
   './influxSeries',
   './queryBuilder',
+  './directives',
   './queryCtrl',
   './funcEditor',
 ],
@@ -96,6 +97,12 @@ function (angular, _, kbn, InfluxSeries, InfluxQueryBuilder) {
         return _.map(data[0].points, function(point) {
           return point[1];
         });
+      });
+    };
+
+    InfluxDatasource.prototype.testDatasource = function() {
+      return this.metricFindQuery('list series').then(function () {
+        return { status: "success", message: "Data source is working", title: "Success" };
       });
     };
 

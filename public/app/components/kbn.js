@@ -383,8 +383,9 @@ function($, _, moment) {
   kbn.valueFormats.mbytes = kbn.formatFuncCreator(1024, [' MiB', ' GiB', ' TiB', ' PiB', ' EiB', ' ZiB', ' YiB']);
   kbn.valueFormats.gbytes = kbn.formatFuncCreator(1024, [' GiB', ' TiB', ' PiB', ' EiB', ' ZiB', ' YiB']);
   kbn.valueFormats.bps = kbn.formatFuncCreator(1000, [' bps', ' Kbps', ' Mbps', ' Gbps', ' Tbps', ' Pbps', ' Ebps', ' Zbps', ' Ybps']);
+  kbn.valueFormats.pps = kbn.formatFuncCreator(1000, [' pps', ' Kpps', ' Mpps', ' Gpps', ' Tpps', ' Ppps', ' Epps', ' Zpps', ' Ypps']);
   kbn.valueFormats.Bps = kbn.formatFuncCreator(1000, [' Bps', ' KBps', ' MBps', ' GBps', ' TBps', ' PBps', ' EBps', ' ZBps', ' YBps']);
-  kbn.valueFormats.short = kbn.formatFuncCreator(1000, ['', ' K', ' Mil', ' Bil', ' Tri', ' Qaudr', ' Quint', ' Sext', ' Sept']);
+  kbn.valueFormats.short = kbn.formatFuncCreator(1000, ['', ' K', ' Mil', ' Bil', ' Tri', ' Quadr', ' Quint', ' Sext', ' Sept']);
   kbn.valueFormats.joule = kbn.formatFuncCreator(1000, [' J', ' kJ', ' MJ', ' GJ', ' TJ', ' PJ', ' EJ', ' ZJ', ' YJ']);
   kbn.valueFormats.amp = kbn.formatFuncCreator(1000, [' A', ' kA', ' MA', ' GA', ' TA', ' PA', ' EA', ' ZA', ' YA']);
   kbn.valueFormats.volt = kbn.formatFuncCreator(1000, [' V', ' kV', ' MV', ' GV', ' TV', ' PV', ' EV', ' ZV', ' YV']);
@@ -398,6 +399,8 @@ function($, _, moment) {
   kbn.valueFormats.celsius = function(value, decimals) { return kbn.toFixed(value, decimals) + ' °C'; };
   kbn.valueFormats.farenheit = function(value, decimals) { return kbn.toFixed(value, decimals) + ' °F'; };
   kbn.valueFormats.humidity = function(value, decimals) { return kbn.toFixed(value, decimals) + ' %H'; };
+  kbn.valueFormats.pressurembar = function(value, decimals) { return kbn.toFixed(value, decimals) + ' mbar'; };
+  kbn.valueFormats.pressurehpa = function(value, decimals) { return kbn.toFixed(value, decimals) + ' hPa'; };
   kbn.valueFormats.ppm = function(value, decimals) { return kbn.toFixed(value, decimals) + ' ppm'; };
   kbn.valueFormats.velocityms = function(value, decimals) { return kbn.toFixed(value, decimals) + ' m/s'; };
   kbn.valueFormats.velocitykmh = function(value, decimals) { return kbn.toFixed(value, decimals) + ' km/h'; };
@@ -405,6 +408,7 @@ function($, _, moment) {
   kbn.valueFormats.velocityknot = function(value, decimals) { return kbn.toFixed(value, decimals) + ' kn'; };
 
   kbn.roundValue = function (num, decimals) {
+    if (num === null) { return null; }
     var n = Math.pow(10, decimals);
     return Math.round((n * num).toFixed(decimals))  / n;
   };
@@ -539,6 +543,7 @@ function($, _, moment) {
           {text: 'short', value: 'short'},
           {text: 'percent', value: 'percent'},
           {text: 'ppm', value: 'ppm'},
+          {text: 'dB', value: 'dB'},
         ]
       },
       {
@@ -564,6 +569,7 @@ function($, _, moment) {
       {
         text: 'data rate',
         submenu: [
+          {text: 'packets/sec', value: 'pps'},
           {text: 'bits/sec', value: 'bps'},
           {text: 'bytes/sec', value: 'Bps'},
         ]
@@ -587,6 +593,8 @@ function($, _, moment) {
           {text: 'Celcius (°C)',         value: 'celsius'  },
           {text: 'Farenheit (°F)',       value: 'farenheit'},
           {text: 'Humidity (%H)',        value: 'humidity' },
+          {text: 'Pressure (mbar)',      value: 'pressurembar' },
+          {text: 'Pressure (hPa)',       value: 'pressurehpa' },
         ]
       },
       {

@@ -38,6 +38,7 @@ function (angular, app, _, TimeSeries, kbn, PanelMeta) {
     // Set and populate defaults
     var _d = {
       links: [],
+      datasource: null,
       maxDataPoints: 100,
       interval: null,
       targets: [{}],
@@ -170,11 +171,25 @@ function (angular, app, _, TimeSeries, kbn, PanelMeta) {
       data.flotpairs = [];
 
       if ($scope.series && $scope.series.length > 0) {
-        data.value = $scope.series[0].stats[$scope.panel.valueName];
-        data.flotpairs = $scope.series[0].flotpairs;
+        var lastPoint = _.last($scope.series[0].datapoints);
+        var lastValue = _.isArray(lastPoint) ? lastPoint[0] : null;
+
+        if (_.isString(lastValue)) {
+          data.value = 0;
+          data.valueFormated = lastValue;
+          data.valueRounded = 0;
+        } else {
+          data.value = $scope.series[0].stats[$scope.panel.valueName];
+          data.flotpairs = $scope.series[0].flotpairs;
+
+          var decimalInfo = $scope.getDecimalsForValue(data.value);
+          var formatFunc = kbn.valueFormats[$scope.panel.format];
+          data.valueFormated = formatFunc(data.value, decimalInfo.decimals, decimalInfo.scaledDecimals);
+          data.valueRounded = kbn.roundValue(data.value, decimalInfo.decimals);
+        }
       }
 
-      // first check value to text mappings
+      // check value to text mappings
       for(var i = 0; i < $scope.panel.valueMaps.length; i++) {
         var map = $scope.panel.valueMaps[i];
         // special null case
@@ -185,6 +200,7 @@ function (angular, app, _, TimeSeries, kbn, PanelMeta) {
           }
           continue;
         }
+
         // value/number to text mapping
         var value = parseFloat(map.value);
         if (value === data.value) {
@@ -196,11 +212,6 @@ function (angular, app, _, TimeSeries, kbn, PanelMeta) {
       if (data.value === null || data.value === void 0) {
         data.valueFormated = "no value";
       }
-
-      var decimalInfo = $scope.getDecimalsForValue(data.value);
-      var formatFunc = kbn.valueFormats[$scope.panel.format];
-      data.valueFormated = formatFunc(data.value, decimalInfo.decimals, decimalInfo.scaledDecimals);
-      data.valueRounded = kbn.roundValue(data.value, decimalInfo.decimals);
     };
 
     $scope.removeValueMap = function(map) {

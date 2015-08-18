@@ -11,11 +11,15 @@ function (angular, _) {
     var self = this;
 
     this.init = function(dashboard) {
+      if (dashboard.snapshot) { return; }
+
       this.iteration = new Date().getTime();
       this.process(dashboard);
     };
 
     this.update = function(dashboard) {
+      if (dashboard.snapshot) { return; }
+
       this.iteration = this.iteration + 1;
       this.process(dashboard);
     };
@@ -91,7 +95,7 @@ function (angular, _) {
     // returns a new panel clone or reuses a clone from previous iteration
     this.repeatRow = function(row) {
       var variables = this.dashboard.templating.list;
-      var variable = _.findWhere(variables, {name: row.repeat.replace('$', '')});
+      var variable = _.findWhere(variables, {name: row.repeat});
       if (!variable) {
         return;
       }
@@ -105,6 +109,8 @@ function (angular, _) {
 
       _.each(selected, function(option, index) {
         copy = self.getRowClone(row, index);
+        copy.scopedVars = {};
+        copy.scopedVars[variable.name] = option;
 
         for (i = 0; i < copy.panels.length; i++) {
           panel = copy.panels[i];
@@ -162,6 +168,7 @@ function (angular, _) {
 
       _.each(selected, function(option, index) {
         var copy = self.getPanelClone(panel, row, index);
+        copy.span = Math.max(12 / selected.length, panel.minSpan);
         copy.scopedVars = copy.scopedVars || {};
         copy.scopedVars[variable.name] = option;
       });

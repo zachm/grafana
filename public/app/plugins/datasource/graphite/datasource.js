@@ -5,6 +5,7 @@ define([
   'config',
   'kbn',
   'moment',
+  './directives',
   './queryCtrl',
   './funcEditor',
   './addGraphiteFunc',
@@ -111,6 +112,7 @@ function (angular, _, $, config, kbn, moment) {
             var list = [];
             for (var i = 0; i < results.data.length; i++) {
               var e = results.data[i];
+
               list.push({
                 annotation: annotation,
                 time: e.when * 1000,
@@ -195,6 +197,12 @@ function (angular, _, $, config, kbn, moment) {
         });
     };
 
+    GraphiteDatasource.prototype.testDatasource = function() {
+      return this.metricFindQuery('*').then(function () {
+        return { status: "success", message: "Data source is working", title: "Success" };
+      });
+    };
+
     GraphiteDatasource.prototype.listDashboards = function(query) {
       return this.doGraphiteRequest({ method: 'GET',  url: '/dashboard/find/', params: {query: query || ''} })
         .then(function(results) {
@@ -221,21 +229,13 @@ function (angular, _, $, config, kbn, moment) {
       return backendSrv.datasourceRequest(options);
     };
 
-    GraphiteDatasource.prototype._seriesRefLetters = [
-      '#A', '#B', '#C', '#D',
-      '#E', '#F', '#G', '#H',
-      '#I', '#J', '#K', '#L',
-      '#M', '#N', '#O', '#P',
-      '#Q', '#R', '#S', '#T',
-      '#U', '#V', '#W', '#X',
-      '#Y', '#Z'
-    ];
+    GraphiteDatasource.prototype._seriesRefLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     GraphiteDatasource.prototype.buildGraphiteParams = function(options, scopedVars) {
       var graphite_options = ['from', 'until', 'rawData', 'format', 'maxDataPoints', 'cacheTimeout'];
       var clean_options = [], targets = {};
       var target, targetValue, i;
-      var regex = /(\#[A-Z])/g;
+      var regex = /\#([A-Z])/g;
       var intervalFormatFixRegex = /'(\d+)m'/gi;
 
       if (options.format !== 'png') {
@@ -252,26 +252,32 @@ function (angular, _, $, config, kbn, moment) {
           continue;
         }
 
+        if (!target.refId) {
+          target.refId = this._seriesRefLetters[i];
+        }
+
         targetValue = templateSrv.replace(target.target, scopedVars);
         targetValue = targetValue.replace(intervalFormatFixRegex, fixIntervalFormat);
-        targets[this._seriesRefLetters[i]] = targetValue;
+        targets[target.refId] = targetValue;
       }
 
-      function nestedSeriesRegexReplacer(match) {
-        return targets[match];
+      function nestedSeriesRegexReplacer(match, g1) {
+        return targets[g1];
       }
 
       for (i = 0; i < options.targets.length; i++) {
         target = options.targets[i];
-        if (!target.target || target.hide) {
+        if (!target.target) {
           continue;
         }
 
-        targetValue = targets[this._seriesRefLetters[i]];
+        targetValue = targets[target.refId];
         targetValue = targetValue.replace(regex, nestedSeriesRegexReplacer);
-        targets[this._seriesRefLetters[i]] = targetValue;
+        targets[target.refId] = targetValue;
 
-        clean_options.push("target=" + encodeURIComponent(targetValue));
+        if (!target.hide) {
+          clean_options.push("target=" + encodeURIComponent(targetValue));
+        }
       }
 
       _.each(options, function (value, key) {

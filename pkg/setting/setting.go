@@ -38,7 +38,6 @@ const (
 var (
 	// App settings.
 	Env       string = DEV
-	AppName   string
 	AppUrl    string
 	AppSubUrl string
 
@@ -68,11 +67,12 @@ var (
 	EnforceDomain      bool
 
 	// Security settings.
-	SecretKey          string
-	LogInRememberDays  int
-	CookieUserName     string
-	CookieRememberName string
-	DisableGravatar    bool
+	SecretKey             string
+	LogInRememberDays     int
+	CookieUserName        string
+	CookieRememberName    string
+	DisableGravatar       bool
+	EmailCodeValidMinutes int
 
 	// User settings
 	AllowUserSignUp    bool
@@ -94,6 +94,9 @@ var (
 	AuthProxyHeaderProperty string
 	AuthProxyAutoSignUp     bool
 
+	// Basic Auth
+	BasicAuthEnabled bool
+
 	// Session settings.
 	SessionOptions session.Options
 
@@ -113,6 +116,13 @@ var (
 
 	ReportingEnabled  bool
 	GoogleAnalyticsId string
+
+	// LDAP
+	LdapEnabled    bool
+	LdapConfigFile string
+
+	// SMTP email settings
+	Smtp SmtpSettings
 )
 
 type CommandLineArgs struct {
@@ -263,7 +273,7 @@ func loadSpecifedConfigFile(configFile string) {
 			}
 			defaultKey, err := defaultSec.GetKey(key.Name())
 			if err != nil {
-				log.Error(3, "Unknown config key %s defined in section %s, in file", key.Name(), section.Name(), configFile)
+				log.Error(3, "Unknown config key %s defined in section %s, in file %s", key.Name(), section.Name(), configFile)
 				continue
 			}
 			defaultKey.SetValue(key.Value())
@@ -346,7 +356,6 @@ func NewConfigContext(args *CommandLineArgs) {
 	setHomePath(args)
 	loadConfiguration(args)
 
-	AppName = Cfg.Section("").Key("app_name").MustString("Grafana")
 	Env = Cfg.Section("").Key("app_mode").MustString("development")
 
 	server := Cfg.Section("server")
@@ -382,7 +391,7 @@ func NewConfigContext(args *CommandLineArgs) {
 	AllowUserSignUp = users.Key("allow_sign_up").MustBool(true)
 	AllowUserOrgCreate = users.Key("allow_org_create").MustBool(true)
 	AutoAssignOrg = users.Key("auto_assign_org").MustBool(true)
-	AutoAssignOrgRole = users.Key("auto_assign_org_role").In("Editor", []string{"Editor", "Admin", "Viewer"})
+	AutoAssignOrgRole = users.Key("auto_assign_org_role").In("Editor", []string{"Editor", "Admin", "Read Only Editor", "Viewer"})
 
 	// anonymous access
 	AnonymousEnabled = Cfg.Section("auth.anonymous").Key("enabled").MustBool(false)
@@ -396,6 +405,9 @@ func NewConfigContext(args *CommandLineArgs) {
 	AuthProxyHeaderProperty = authProxy.Key("header_property").String()
 	AuthProxyAutoSignUp = authProxy.Key("auto_sign_up").MustBool(true)
 
+	authBasic := Cfg.Section("auth.basic")
+	BasicAuthEnabled = authBasic.Key("enabled").MustBool(true)
+
 	// PhantomJS rendering
 	ImagesDir = filepath.Join(DataPath, "png")
 	PhantomDir = filepath.Join(HomePath, "vendor/phantomjs")
@@ -404,7 +416,12 @@ func NewConfigContext(args *CommandLineArgs) {
 	ReportingEnabled = analytics.Key("reporting_enabled").MustBool(true)
 	GoogleAnalyticsId = analytics.Key("google_analytics_ua_id").String()
 
+	ldapSec := Cfg.Section("auth.ldap")
+	LdapEnabled = ldapSec.Key("enabled").MustBool(false)
+	LdapConfigFile = ldapSec.Key("config_file").String()
+
 	readSessionConfig()
+	readSmtpSettings()
 }
 
 func readSessionConfig() {
@@ -439,6 +456,8 @@ var logLevels = map[string]int{
 }
 
 func initLogging(args *CommandLineArgs) {
+	//close any existing log handlers.
+	log.Close()
 	// Get and check log mode.
 	LogModes = strings.Split(Cfg.Section("log").Key("mode").MustString("console"), ",")
 	LogsPath = makeAbsolute(Cfg.Section("paths").Key("logs").String(), HomePath)

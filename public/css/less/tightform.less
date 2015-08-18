@@ -20,6 +20,16 @@
   }
 }
 
+.tight-form-container-no-item-borders {
+  border: 1px solid @grafanaTargetBorder;
+  border-bottom: none;
+
+  .tight-form, .tight-form-item, [type=text].tight-form-input, [type=text].tight-form-clear-input  {
+    border: none;
+  }
+}
+
+
 .spaced-form {
   .tight-form {
     margin: 7px 0;
@@ -34,11 +44,10 @@
 }
 
 .tight-form-container {
+  border-bottom: 1px solid @grafanaTargetBorder;
+
   .tight-form:last-child {
     border-bottom: none;
-  }
-  &:last-child {
-    border-bottom: 1px solid @grafanaTargetBorder;
   }
 }
 
@@ -55,7 +64,7 @@
 }
 
 .grafana-metric-options {
-  margin-top: 35px;
+  margin-top: 25px;
 }
 
 .tight-form-item {
@@ -85,8 +94,8 @@
   &.last {
     border-right: none;
   }
-
 }
+
 
 .tight-form-item-icon {
   i {
@@ -124,7 +133,6 @@ input[type=text].tight-form-clear-input {
   border: none;
   margin: 0px;
   background: transparent;
-  float: left;
   color: @grafanaTargetColor;
   border-radius: 0;
   border-right: 1px solid @grafanaTargetSegmentBorder;
@@ -158,7 +166,7 @@ select.tight-form-input {
   margin: 0px;
   border-radius: 0;
   height: 36px;
-  padding: 8px 3px;
+  padding: 9px 3px;
   &.last {
     border-right: none;
   }
@@ -200,5 +208,9 @@ select.tight-form-input {
   .tight-form {
     margin-left: 20px;
   }
+}
+
+.tight-form-align {
+  padding-left: 66px;
 }
 

@@ -8,7 +8,7 @@
 <div class="page-container">
 	<div class="page">
 
-		<h2>Profile details</h2>
+		<h2>Profile</h2>
 
 		<form name="userForm">
 			<div>
@@ -64,17 +64,17 @@
 			<button type="submit" class="pull-right btn btn-success" ng-click="update()">Update</button>
 		</form>
 
-		<h2>Organizations</h2>
+		<h3>Organizations</h3>
 
 		<table class="grafana-options-table">
 			<tr ng-repeat="org in orgs">
 				<td style="width: 98%"><strong>Name: </strong> {{org.name}}</td>
 				<td><strong>Role: </strong> {{org.role}}</td>
 				<td class="nobg max-width-btns">
-					<span class="btn btn-primary btn-mini" ng-show="org.isUsing">
+					<span class="btn btn-primary btn-mini" ng-show="org.orgId === contextSrv.user.orgId">
 						Current
 					</span>
-					<a ng-click="setUsingOrg(org)" class="btn btn-inverse btn-mini" ng-show="!org.isUsing">
+					<a ng-click="setUsingOrg(org)" class="btn btn-inverse btn-mini" ng-show="org.orgId !== contextSrv.user.orgId">
 						Select
 					</a>
 				</td>
