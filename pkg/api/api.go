@@ -160,7 +160,7 @@ func Register(r *macaron.Macaron) {
 	// admin api
 	r.Group("/api/admin", func() {
 		r.Get("/settings", AdminGetSettings)
-		r.Post("/users", bind(dtos.AdminCreateUserForm{}), AdminCreateUser)
+		r.Post("/users", bind(dtos.AdminCreateUserForm{}), wrap(AdminCreateUser))
 		r.Put("/users/:id/password", bind(dtos.AdminUpdateUserPasswordForm{}), AdminUpdateUserPassword)
 		r.Put("/users/:id/permissions", bind(dtos.AdminUpdateUserPermissionsForm{}), AdminUpdateUserPermissions)
 		r.Delete("/users/:id", AdminDeleteUser)

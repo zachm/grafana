@@ -11,11 +11,15 @@ function (angular, _) {
     $scope.user = {};
     $scope.newOrg = { name: '', role: 'Editor' };
     $scope.permissions = {};
+    $scope.orgModes = [{name: 'Add to existing Org.', value: false}, {name: 'Create new Org.', value: true}];
 
     $scope.init = function() {
       if ($routeParams.id) {
         $scope.getUser($routeParams.id);
         $scope.getUserOrgs($routeParams.id);
+      } else {
+        $scope.user.newOrg = false;
+        $scope.user.orgRole = 'Editor';
       }
     };
 

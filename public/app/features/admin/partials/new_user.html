@@ -1,21 +1,26 @@
-<topnav icon="fa fa-fw fa-cogs" title="Global Users" subnav="true">
+<topnav icon="fa fa-fw fa-user" title="Global Users" subnav="true">
 	<ul class="nav">
-		<li><a href="admin/users">Users</a></li>
-		<li class="active"><a href="admin/users/create">Create user</a></li>
+		<li><a href="admin/users">List</a></li>
+		<li class="active"><a href="admin/users/create">Add or Invite</a></li>
 	</ul>
 </topnav>
 
 <div class="page-container">
 	<div class="page">
-		<h2>
-			Create a new user
-		</h2>
+
+		<button ng-hide="inviteMode" class="btn btn-inverse pull-right" style="margin-top: 5px" ng-click="inviteMode = !inviteMode">Switch to invite mode</button>
+		<button ng-show="inviteMode" class="btn btn-inverse pull-right" style="margin-top: 5px" ng-click="inviteMode = !inviteMode">Switch to add mode</button>
+
+		<h2 ng-hide="inviteMode">Add New User</h2>
+		<h2 ng-show="inviteMode">Invite user</h2>
 
 		<form name="userForm">
-			<div>
+			<div class="tight-form-section" style="margin-right: 0">
+				<h5>User Details</h5>
+
 				<div class="tight-form">
 					<ul class="tight-form-list">
-						<li class="tight-form-item" style="width: 100px">
+						<li class="tight-form-item" style="width: 84px">
 							<strong>Name</strong>
 						</li>
 						<li>
@@ -26,7 +31,7 @@
 				</div>
 				<div class="tight-form">
 					<ul class="tight-form-list">
-						<li class="tight-form-item" style="width: 100px">
+						<li class="tight-form-item" style="width: 84px">
 							<strong>Email</strong>
 						</li>
 						<li>
@@ -35,20 +40,9 @@
 					</ul>
 					<div class="clearfix"></div>
 				</div>
-				<div class="tight-form">
+				<div class="tight-form" ng-hide="inviteMode">
 					<ul class="tight-form-list">
-						<li class="tight-form-item" style="width: 100px">
-							<strong>Username</strong>
-						</li>
-						<li>
-							<input type="text" ng-model="user.login" class="input-xxlarge tight-form-input last" >
-						</li>
-					</ul>
-					<div class="clearfix"></div>
-				</div>
-				<div class="tight-form">
-					<ul class="tight-form-list">
-						<li class="tight-form-item" style="width: 100px">
+						<li class="tight-form-item" style="width: 84px">
 							<strong>Password</strong>
 						</li>
 						<li>
@@ -59,8 +53,63 @@
 				</div>
 			</div>
 
+			<div class="tight-form-section" style="margin-right: 0">
+				<h5>Organization</h5>
+
+				<div class="tight-form">
+					<ul class="tight-form-list">
+						<li class="tight-form-item" style="width: 84px">
+							<strong>Option</strong>
+						</li>
+						<li>
+							<select ng-model="user.newOrg" class="input-xxlarge tight-form-input last" ng-options="o.value as o.name for o in orgModes">
+							</select>
+						</li>
+					</ul>
+					<div class="clearfix"></div>
+				</div>
+				<div class="tight-form" ng-if="!user.newOrg">
+					<ul class="tight-form-list">
+						<li class="tight-form-item" style="width: 84px">
+							<strong>Org.</strong>
+						</li>
+						<li>
+							<input type="text" ng-model="user.orgName" required class="input-xxlarge tight-form-input last" placeholder="search for existing org" bs-typeahead="searchOrgs">
+						</li>
+					</ul>
+					<div class="clearfix"></div>
+				</div>
+				<div class="tight-form" ng-if="!user.newOrg">
+					<ul class="tight-form-list">
+						<li class="tight-form-item" style="width: 84px">
+							<strong>Role</strong>
+						</li>
+						<li>
+							<select ng-model="user.orgRole" class="input-small tight-form-input" ng-options="f for f in ['Viewer', 'Editor', 'Read Only Editor', 'Admin']"></select>
+						</li>
+					</ul>
+					<div class="clearfix"></div>
+				</div>
+
+				<div class="tight-form" ng-if="user.newOrg">
+					<ul class="tight-form-list">
+						<li class="tight-form-item" style="width: 84px">
+							<strong>Org.</strong>
+						</li>
+						<li>
+							<input type="text" ng-model="user.orgName" class="input-xxlarge tight-form-input last" placeholder="Suggested org name">
+						</li>
+					</ul>
+					<div class="clearfix"></div>
+				</div>
+			</div>
+
 			<br>
-			<button type="submit" class="pull-right btn btn-success" ng-click="create()">Create</button>
+
+			<button type="submit" class="pull-right btn btn-success" ng-click="create()">
+				<span ng-hide="inviteMode">Add User</span>
+				<span ng-show="inviteMode">Send Invite</span>
+			</button>
 		</form>
 	</div>
 </div>

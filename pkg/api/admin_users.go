@@ -9,35 +9,35 @@ import (
 	"github.com/grafana/grafana/pkg/util"
 )
 
-func AdminCreateUser(c *middleware.Context, form dtos.AdminCreateUserForm) {
+func AdminCreateUser(c *middleware.Context, form dtos.AdminCreateUserForm) Response {
 	cmd := m.CreateUserCommand{
 		Login:    form.Login,
 		Email:    form.Email,
 		Password: form.Password,
+		OrgName:  form.OrgName,
+		OrgRole:  form.OrgRole,
+		NewOrg:   form.NewOrg,
 		Name:     form.Name,
 	}
 
 	if len(cmd.Login) == 0 {
 		cmd.Login = cmd.Email
 		if len(cmd.Login) == 0 {
-			c.JsonApiErr(400, "Validation error, need specify either username or email", nil)
-			return
+			return ApiError(400, "Validation error, need specify either username or email", nil)
 		}
 	}
 
 	if len(cmd.Password) < 4 {
-		c.JsonApiErr(400, "Password is missing or too short", nil)
-		return
+		return ApiError(400, "Password is missing or too short", nil)
 	}
 
 	if err := bus.Dispatch(&cmd); err != nil {
-		c.JsonApiErr(500, "failed to create user", err)
-		return
+		return ApiError(500, "failed to create user", err)
 	}
 
 	metrics.M_Api_Admin_User_Create.Inc(1)
 
-	c.JsonOK("User created")
+	return ApiSuccess("User created")
 }
 
 func AdminUpdateUserPassword(c *middleware.Context, form dtos.AdminUpdateUserPasswordForm) {

@@ -1,10 +1,20 @@
 package dtos
 
-type AdminCreateUserForm struct {
-	Email    string `json:"email"`
-	Login    string `json:"login"`
-	Name     string `json:"name"`
+import m "github.com/grafana/grafana/pkg/models"
+
+type SignUpForm struct {
+	Email    string `json:"email" binding:"Required"`
 	Password string `json:"password" binding:"Required"`
+}
+
+type AdminCreateUserForm struct {
+	Email    string     `json:"email"`
+	Login    string     `json:"login"`
+	Name     string     `json:"name"`
+	OrgName  string     `json:"orgName"`
+	OrgRole  m.RoleType `json:"orgRole"`
+	NewOrg   bool       `json:"newOrg"`
+	Password string     `json:"password" binding:"Required"`
 }
 
 type AdminUpdateUserForm struct {

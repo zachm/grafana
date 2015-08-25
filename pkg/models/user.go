@@ -44,14 +44,42 @@ func (u *User) NameOrFallback() string {
 // COMMANDS
 
 type CreateUserCommand struct {
-	Email    string `json:"email" binding:"Required"`
-	Login    string `json:"login"`
-	Name     string `json:"name"`
-	Company  string `json:"compay"`
-	Password string `json:"password" binding:"Required"`
-	IsAdmin  bool   `json:"-"`
+	Email    string
+	Login    string
+	Name     string
+	OrgName  string
+	OrgRole  RoleType
+	NewOrg   bool
+	Company  string
+	Password string
+	IsAdmin  bool
 
-	Result User `json:"-"`
+	Result User
+}
+
+func (cmd *CreateUserCommand) Validate() (bool, string) {
+	if len(cmd.Login) == 0 {
+		cmd.Login = cmd.Email
+		if len(cmd.Login) == 0 {
+			return false, "Validation error, need specify either username or email"
+		}
+	}
+
+	if !cmd.NewOrg {
+		if len(cmd.OrgName) == 0 {
+			return false, "OrgName missing, needed when NewOrg is false"
+		}
+
+		if !cmd.OrgRole.IsValid() {
+			return false, "OrgRole is invalid"
+		}
+	}
+
+	if len(cmd.Password) < 4 {
+		return false, "Password is missing or too short"
+	}
+
+	return true, ""
 }
 
 type UpdateUserCommand struct {

@@ -38,8 +38,7 @@
 							Role
 						</li>
 						<li>
-							<select ng-model="invite.role" class="input-small tight-form-input" ng-options="f for f in ['Viewer', 'Editor', 'Read Only Editor', 'Admin']">
-							</select>
+							<select ng-model="invite.role" class="input-small tight-form-input" ng-options="f for f in ['Viewer', 'Editor', 'Read Only Editor', 'Admin']"></select>
 						</li>
 						<li class="tight-form-item last" ng-show="$index > 0">
 							<a class="pointer" tabindex="1" ng-click="removeInvite(invite)">
