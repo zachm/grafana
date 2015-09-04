@@ -124,7 +124,8 @@ function (angular, _, $) {
           function addElementsAndCompile() {
             $funcLink.appendTo(elem);
 
-            var $paramLink = $('<a ng-click="" class="graphite-func-param-link">' + $scope.field.name + '</a>');
+            var $paramLink = $('<a class="graphite-func-param-link pointer">' + $scope.field.name + '</a>');
+            var $selectAsLink = $('<span class="query-keyword">&nbsp; as </span><a class="graphite-func-param-link pointer">' + $scope.field.name + '</a>');
             var $input = $(paramTemplate);
 
             $paramLink.appendTo(elem);
@@ -138,6 +139,7 @@ function (angular, _, $) {
             addTypeahead($input);
 
             $('<span>)</span>').appendTo(elem);
+            $selectAsLink.appendTo(elem);
 
             $compile(elem.contents())($scope);
           }
