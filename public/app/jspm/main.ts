@@ -47,24 +47,14 @@ function initApp() {
   var module_types = ['controllers', 'directives', 'factories', 'services', 'filters', 'routes'];
 
   _.each(module_types, function (type) {
-    var module_name = 'grafana.'+type;
+    var module_name = 'grafana.' + type;
     // create the module
     useModule(angular.module(module_name, []));
     // push it into the apps dependencies
     apps_deps.push(module_name);
   });
 
-  var preBootRequires = [
-    '../core/core',
-    '../services/all',
-    '../features/all',
-    '../controllers/all',
-    '../directives/all',
-    '../components/partials',
-    '../routes/all',
-  ];
-
-  require(preBootRequires, function () {
+  require(['app/core/core'], function () {
     // disable tool tip animation
     $.fn.tooltip.defaults.animation = false;
 
