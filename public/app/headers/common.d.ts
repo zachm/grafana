@@ -14,4 +14,34 @@ declare module 'kbn' {
   export = kbn;
 }
 
+declare module 'angular-route' {
+  var kbn : any;
+  export = kbn;
+}
+
+declare module 'angular-sanitize' {
+  var kbn : any;
+  export = kbn;
+}
+
+declare module 'bootstrap' {
+  var kbn : any;
+  export = kbn;
+}
+
+declare module 'angular-strap' {
+  var kbn : any;
+  export = kbn;
+}
+
+declare module 'angular-dragdrop' {
+  var kbn : any;
+  export = kbn;
+}
+
+
+
+
+
+
 

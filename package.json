@@ -77,6 +77,9 @@
     },
     "configFile": "public/app/jspm.conf.js",
     "dependencies": {
+      "angular": "github:angular/bower-angular@^1.4.5",
+      "angular-route": "github:angular/bower-angular-route@^1.4.5",
+      "angular-sanitize": "github:angular/bower-angular-sanitize@^1.4.5",
       "jquery": "github:components/jquery@^2.1.4",
       "lodash": "npm:lodash@^3.10.1",
       "moment": "github:moment/moment@^2.10.6"

@@ -1,11 +1,10 @@
 define([
   'angular',
-  'app',
   'lodash',
   'config',
   'components/panelmeta',
 ],
-function (angular, app, _, config, PanelMeta) {
+function (angular, _, config, PanelMeta) {
   'use strict';
 
   var module = angular.module('grafana.panels.dashlist', []);
