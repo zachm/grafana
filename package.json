@@ -65,14 +65,15 @@
   "dependencies": {
     "grunt-jscs": "~1.5.x",
     "grunt-sync": "^0.4.1",
+    "grunt-systemjs-builder": "^0.2.2",
     "karma-sinon": "^1.0.3",
     "lodash": "^2.4.1",
     "sinon": "1.10.3"
   },
   "jspm": {
     "directories": {
-      "packages": "public/jspm_packages",
-      "src": "public"
+      "baseURL": "public",
+      "packages": "public/vendor/jspm"
     },
     "configFile": "public/app/jspm.conf.js",
     "dependencies": {

@@ -51,13 +51,14 @@
 	</script>
 
 	<!-- build:js [[.AppSubUrl]]/app/app.js -->
-	<script src="[[.AppSubUrl]]/public/jspm_packages/system.js"></script>
-	<script src="[[.AppSubUrl]]/public/app/jspm.conf.js"></script>
+	<!-- <script src="[[.AppSubUrl]]/public/vendor/jspm/system.js"></script> -->
+	<!-- <script src="[[.AppSubUrl]]/public/app/jspm.conf.js"></script> -->
+	<!-- <script> -->
+	<!-- 	System.import('app/jspm/main'); -->
+	<!-- </script> -->
 	<script src="[[.AppSubUrl]]/public/app/bundle.js"></script>
-	<script>
-		System.import('app/jspm/main');
-	</script>
 	<!-- endbuild -->
+
 
 	[[if .GoogleAnalyticsId]]
 		<script>

@@ -1,9 +1,11 @@
 System.config({
+  baseURL: "public",
   defaultJSExtensions: true,
   transpiler: "none",
   paths: {
-    "github:*": "public/jspm_packages/github/*",
-    "npm:*": "public/jspm_packages/npm/*"
+    "github:*": "vendor/jspm/github/*",
+    "npm:*": "vendor/jspm/npm/*",
+    "kbn": "app/components/kbn.js"
   },
 
   map: {

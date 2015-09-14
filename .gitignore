@@ -5,7 +5,7 @@ awsconfig
 /dist
 /emails/dist
 /public_gen
-/public/jspm_packages
+/public/vendor/jspm
 /tmp
 
 docs/AWS_S3_BUCKET
