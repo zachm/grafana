@@ -36,6 +36,7 @@
     "grunt-typescript": "^0.7.0",
     "grunt-usemin": "3.0.0",
     "jshint-stylish": "~0.1.5",
+    "jspm": "^0.16.2",
     "karma": "~0.12.31",
     "karma-chrome-launcher": "~0.1.4",
     "karma-coffee-preprocessor": "~0.1.2",
@@ -67,5 +68,18 @@
     "karma-sinon": "^1.0.3",
     "lodash": "^2.4.1",
     "sinon": "1.10.3"
+  },
+  "jspm": {
+    "directories": {
+      "packages": "public/jspm_packages",
+      "src": "public"
+    },
+    "configFile": "public/app/jspm.conf.js",
+    "dependencies": {
+      "jquery": "github:components/jquery@^2.1.4",
+      "lodash": "npm:lodash@^3.10.1",
+      "moment": "github:moment/moment@^2.10.6"
+    },
+    "devDependencies": {}
   }
 }

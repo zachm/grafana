@@ -17,11 +17,7 @@
     <link rel="icon" type="image/png" href="[[.AppSubUrl]]/img/fav32.png">
 		<base href="[[.AppSubUrl]]/" />
 
-		<!-- build:js [[.AppSubUrl]]/app/app.js -->
-    <script src="[[.AppSubUrl]]/public/vendor/requirejs/require.js"></script>
-    <script src="[[.AppSubUrl]]/public/app/components/require.config.js"></script>
-    <!-- endbuild -->
-  </head>
+	</head>
 
 	<body ng-cloak ng-controller="GrafanaCtrl" ng-class="{'sidemenu-open': contextSrv.sidemenu}">
 		<div class="sidemenu-canvas">
@@ -52,11 +48,16 @@
 			user:[[.User]],
 			settings: [[.Settings]],
 		};
-
-    require(['app'], function (app) {
-	    app.boot();
-    })
 	</script>
+
+	<!-- build:js [[.AppSubUrl]]/app/app.js -->
+	<script src="[[.AppSubUrl]]/public/jspm_packages/system.js"></script>
+	<script src="[[.AppSubUrl]]/public/app/jspm.conf.js"></script>
+	<script src="[[.AppSubUrl]]/public/app/bundle.js"></script>
+	<script>
+		System.import('app/jspm/main');
+	</script>
+	<!-- endbuild -->
 
 	[[if .GoogleAnalyticsId]]
 		<script>
