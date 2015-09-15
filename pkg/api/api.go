@@ -81,7 +81,6 @@ func Register(r *macaron.Macaron) {
 			r.Post("/stars/dashboard/:id", wrap(StarDashboard))
 			r.Delete("/stars/dashboard/:id", wrap(UnstarDashboard))
 			r.Put("/password", bind(m.ChangeUserPasswordCommand{}), wrap(ChangeUserPassword))
-			r.Get("/quotas", wrap(GetUserQuotas))
 		})
 
 		// users (admin permission required)
@@ -95,7 +94,6 @@ func Register(r *macaron.Macaron) {
 		// org information available to all users.
 		r.Group("/org", func() {
 			r.Get("/", wrap(GetOrgCurrent))
-			r.Get("/quotas", wrap(GetOrgQuotas))
 		})
 
 		// current org
@@ -109,12 +107,12 @@ func Register(r *macaron.Macaron) {
 
 			// invites
 			r.Get("/invites", wrap(GetPendingOrgInvites))
-			r.Post("/invites", quota("user"), bind(dtos.AddInviteForm{}), wrap(AddOrgInvite))
+			r.Post("/invites", quota("org_user"), bind(dtos.AddInviteForm{}), wrap(AddOrgInvite))
 			r.Patch("/invites/:code/revoke", wrap(RevokeInvite))
 		}, regOrgAdmin)
 
 		// create new org
-		r.Post("/orgs", quota("org"), bind(m.CreateOrgCommand{}), wrap(CreateOrg))
+		r.Post("/orgs", quota("org"), quota("org_user"), bind(m.CreateOrgCommand{}), wrap(CreateOrg))
 
 		// search all orgs
 		r.Get("/orgs", reqGrafanaAdmin, wrap(SearchOrgs))
@@ -126,11 +124,9 @@ func Register(r *macaron.Macaron) {
 			r.Put("/address", bind(dtos.UpdateOrgAddressForm{}), wrap(UpdateOrgAddress))
 			r.Delete("/", wrap(DeleteOrgById))
 			r.Get("/users", wrap(GetOrgUsers))
-			r.Post("/users", bind(m.AddOrgUserCommand{}), wrap(AddOrgUser))
+			r.Post("/users", quota("org_user"), bind(m.AddOrgUserCommand{}), wrap(AddOrgUser))
 			r.Patch("/users/:userId", bind(m.UpdateOrgUserCommand{}), wrap(UpdateOrgUser))
 			r.Delete("/users/:userId", wrap(RemoveOrgUser))
-			r.Get("/quotas", wrap(GetOrgQuotas))
-			r.Put("/quotas/:target", bind(m.UpdateOrgQuotaCmd{}), wrap(UpdateOrgQuota))
 		}, reqGrafanaAdmin)
 
 		// auth api keys
@@ -178,8 +174,6 @@ func Register(r *macaron.Macaron) {
 		r.Put("/users/:id/password", bind(dtos.AdminUpdateUserPasswordForm{}), AdminUpdateUserPassword)
 		r.Put("/users/:id/permissions", bind(dtos.AdminUpdateUserPermissionsForm{}), AdminUpdateUserPermissions)
 		r.Delete("/users/:id", AdminDeleteUser)
-		r.Get("/users/:id/quotas", wrap(GetUserQuotas))
-		r.Put("/users/:id/quotas/:target", bind(m.UpdateUserQuotaCmd{}), wrap(UpdateUserQuota))
 	}, reqGrafanaAdmin)
 
 	// rendering

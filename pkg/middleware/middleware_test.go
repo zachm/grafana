@@ -238,6 +238,11 @@ func middlewareScenario(desc string, fn scenarioFunc) {
 			}
 		}
 
+		bus.AddHandler("test", func(query *m.GetOrgByNameQuery) error {
+			query.Result = &m.Org{Id: 2, Name: "test"}
+			return nil
+		})
+
 		sc.m.Get("/", sc.defaultHandler)
 
 		fn(sc)

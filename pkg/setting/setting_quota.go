@@ -2,6 +2,10 @@ package setting
 
 import (
 	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/grafana/grafana/pkg/log"
 )
 
 type OrgQuota struct {
@@ -56,39 +60,70 @@ func quotaToMap(q interface{}) map[string]int64 {
 	return qMap
 }
 
+type QuotaLimit struct {
+	GlobalLimit int64
+	OrgLimit    int64
+	UserLimit   int64
+}
+
 type QuotaSettings struct {
 	Enabled bool
-	Org     *OrgQuota
-	User    *UserQuota
-	Global  *GlobalQuota
+	Limits  map[string]*QuotaLimit
+}
+
+func parseQuotaLimit(str string) int64 {
+	if str == "NA" {
+		return -1
+	}
+
+	val, _ := strconv.ParseInt(str, 10, 0)
+	return val
 }
 
 func readQuotaSettings() {
 	// set global defaults.
-	quota := Cfg.Section("quota")
-	Quota.Enabled = quota.Key("enabled").MustBool(false)
+	cfgSection := Cfg.Section("quota")
+	Quota.Enabled = cfgSection.Key("enabled").MustBool(false)
 
-	// per ORG Limits
-	Quota.Org = &OrgQuota{
-		User:       quota.Key("org_user").MustInt64(10),
-		DataSource: quota.Key("org_data_source").MustInt64(10),
-		Dashboard:  quota.Key("org_dashboard").MustInt64(10),
-		ApiKey:     quota.Key("org_api_key").MustInt64(10),
+	Quota.Limits = make(map[string]*QuotaLimit)
+	for _, key := range cfgSection.Keys() {
+		keyName := key.Name()
+
+		if strings.HasPrefix(keyName, "limit_") {
+			keyName = strings.TrimPrefix(keyName, "limit_")
+			keyName = strings.TrimSuffix(keyName, "s")
+			vals := key.Strings(",")
+			Quota.Limits[keyName] = &QuotaLimit{
+				GlobalLimit: parseQuotaLimit(vals[0]),
+				OrgLimit:    parseQuotaLimit(vals[1]),
+				UserLimit:   parseQuotaLimit(vals[2]),
+			}
+		}
 	}
 
-	// per User limits
-	Quota.User = &UserQuota{
-		Org: quota.Key("user_org").MustInt64(10),
-	}
+	log.Info("Values %v", Quota.Limits)
 
-	// Global Limits
-	Quota.Global = &GlobalQuota{
-		User:       quota.Key("global_user").MustInt64(-1),
-		Org:        quota.Key("global_org").MustInt64(-1),
-		DataSource: quota.Key("global_data_source").MustInt64(-1),
-		Dashboard:  quota.Key("global_dashboard").MustInt64(-1),
-		ApiKey:     quota.Key("global_api_key").MustInt64(-1),
-		Session:    quota.Key("global_session").MustInt64(-1),
-	}
+	// // per ORG Limits
+	// Quota.Org = &OrgQuota{
+	// 	User:       quota.Key("org_user").MustInt64(10),
+	// 	DataSource: quota.Key("org_data_source").MustInt64(10),
+	// 	Dashboard:  quota.Key("org_dashboard").MustInt64(10),
+	// 	ApiKey:     quota.Key("org_api_key").MustInt64(10),
+	// }
+	//
+	// // per User limits
+	// Quota.User = &UserQuota{
+	// 	Org: quota.Key("user_org").MustInt64(10),
+	// }
+	//
+	// // Global Limits
+	// Quota.Global = &GlobalQuota{
+	// 	User:       quota.Key("global_user").MustInt64(-1),
+	// 	Org:        quota.Key("global_org").MustInt64(-1),
+	// 	DataSource: quota.Key("global_data_source").MustInt64(-1),
+	// 	Dashboard:  quota.Key("global_dashboard").MustInt64(-1),
+	// 	ApiKey:     quota.Key("global_api_key").MustInt64(-1),
+	// 	Session:    quota.Key("global_session").MustInt64(-1),
+	// }
 
 }
