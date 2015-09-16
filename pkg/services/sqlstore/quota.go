@@ -6,6 +6,7 @@ import (
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/log"
 	m "github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 func init() {
@@ -18,6 +19,18 @@ type quotaCount struct {
 }
 
 func IsQuotaReachedQuery(query *m.IsQuotaReachedQuery) error {
+	var quota m.Quota
+	sess := x.Table("quota").Where("target=? AND org_id=? AND user_id=?", query.Target, query.OrgId, query.UserId)
+	if exists, err := sess.Get(&quota); err != nil {
+		return err
+	} else if !exists {
+		quota.Limit = setting.GetDefaultQuotaFor(query.Target, query.OrgId, query.UserId)
+	}
+
+	if quota.Limit == -1 {
+		return nil
+	}
+
 	params := make([]interface{}, 0)
 	rawSql := fmt.Sprintf("SELECT COUNT(*) as count from %s", dialect.Quote(query.Target))
 
@@ -34,9 +47,9 @@ func IsQuotaReachedQuery(query *m.IsQuotaReachedQuery) error {
 		return err
 	}
 
-	log.Debug("sqlstore: IsQuotaReachedQuery (OrgId, %d, UserId: %d) Limit: %d, Count: %d", query.OrgId, query.UserId, query.Limit, resp[0].Count)
+	log.Debug("sqlstore: IsQuotaReachedQuery (OrgId, %d, UserId: %d) Limit: %d, Count: %d", query.OrgId, query.UserId, quota.Limit, resp[0].Count)
 
-	query.Result = resp[0].Count >= query.Limit
+	query.Result = resp[0].Count >= quota.Limit
 	return nil
 }
 

@@ -14,14 +14,14 @@ func Register(r *macaron.Macaron) {
 	reqGrafanaAdmin := middleware.Auth(&middleware.AuthOptions{ReqSignedIn: true, ReqGrafanaAdmin: true})
 	reqEditorRole := middleware.RoleAuth(m.ROLE_EDITOR, m.ROLE_ADMIN)
 	regOrgAdmin := middleware.RoleAuth(m.ROLE_ADMIN)
-	quota := middleware.Quota
 	bind := binding.Bind
+	quota := middleware.Quota
 
 	// not logged in views
 	r.Get("/", reqSignedIn, Index)
 	r.Get("/logout", Logout)
-	r.Post("/login", quota("session"), bind(dtos.LoginCommand{}), wrap(LoginPost))
-	r.Get("/login/:name", quota("session"), OAuthLogin)
+	r.Post("/login", quota(middleware.QuotaDefSessions), bind(dtos.LoginCommand{}), wrap(LoginPost))
+	r.Get("/login/:name", quota(middleware.QuotaDefSessions), OAuthLogin)
 	r.Get("/login", LoginView)
 	r.Get("/invite/:code", Index)
 
@@ -45,8 +45,8 @@ func Register(r *macaron.Macaron) {
 	// sign up
 	r.Get("/signup", Index)
 	r.Get("/api/user/signup/options", wrap(GetSignUpOptions))
-	r.Post("/api/user/signup", quota("user"), bind(dtos.SignUpForm{}), wrap(SignUp))
-	r.Post("/api/user/signup/step2", bind(dtos.SignUpStep2Form{}), wrap(SignUpStep2))
+	r.Post("/api/user/signup", quota(middleware.QuotaDefUsers), bind(dtos.SignUpForm{}), wrap(SignUp))
+	r.Post("/api/user/signup/step2", quota(middleware.QuotaDefUsers), bind(dtos.SignUpStep2Form{}), wrap(SignUpStep2))
 
 	// invited
 	r.Get("/api/user/invite/:code", wrap(GetInviteInfoByCode))
@@ -67,7 +67,7 @@ func Register(r *macaron.Macaron) {
 	r.Get("/api/snapshots-delete/:key", DeleteDashboardSnapshot)
 
 	// api renew session based on remember cookie
-	r.Get("/api/login/ping", quota("session"), LoginApiPing)
+	r.Get("/api/login/ping", quota(middleware.QuotaDefSessions), LoginApiPing)
 
 	// authed api
 	r.Group("/api", func() {
@@ -100,19 +100,19 @@ func Register(r *macaron.Macaron) {
 		r.Group("/org", func() {
 			r.Put("/", bind(dtos.UpdateOrgForm{}), wrap(UpdateOrgCurrent))
 			r.Put("/address", bind(dtos.UpdateOrgAddressForm{}), wrap(UpdateOrgAddressCurrent))
-			r.Post("/users", quota("user"), bind(m.AddOrgUserCommand{}), wrap(AddOrgUserToCurrentOrg))
+			r.Post("/users", quota(middleware.QuotaDefUsers), bind(m.AddOrgUserCommand{}), wrap(AddOrgUserToCurrentOrg))
 			r.Get("/users", wrap(GetOrgUsersForCurrentOrg))
 			r.Patch("/users/:userId", bind(m.UpdateOrgUserCommand{}), wrap(UpdateOrgUserForCurrentOrg))
 			r.Delete("/users/:userId", wrap(RemoveOrgUserForCurrentOrg))
 
 			// invites
 			r.Get("/invites", wrap(GetPendingOrgInvites))
-			r.Post("/invites", quota("org_user"), bind(dtos.AddInviteForm{}), wrap(AddOrgInvite))
+			r.Post("/invites", quota(middleware.QuotaDefUsers), bind(dtos.AddInviteForm{}), wrap(AddOrgInvite))
 			r.Patch("/invites/:code/revoke", wrap(RevokeInvite))
 		}, regOrgAdmin)
 
 		// create new org
-		r.Post("/orgs", quota("org"), quota("org_user"), bind(m.CreateOrgCommand{}), wrap(CreateOrg))
+		r.Post("/orgs", quota(middleware.QuotaDefOrgs), bind(m.CreateOrgCommand{}), wrap(CreateOrg))
 
 		// search all orgs
 		r.Get("/orgs", reqGrafanaAdmin, wrap(SearchOrgs))
@@ -124,7 +124,7 @@ func Register(r *macaron.Macaron) {
 			r.Put("/address", bind(dtos.UpdateOrgAddressForm{}), wrap(UpdateOrgAddress))
 			r.Delete("/", wrap(DeleteOrgById))
 			r.Get("/users", wrap(GetOrgUsers))
-			r.Post("/users", quota("org_user"), bind(m.AddOrgUserCommand{}), wrap(AddOrgUser))
+			r.Post("/users", bind(m.AddOrgUserCommand{}), wrap(AddOrgUser))
 			r.Patch("/users/:userId", bind(m.UpdateOrgUserCommand{}), wrap(UpdateOrgUser))
 			r.Delete("/users/:userId", wrap(RemoveOrgUser))
 		}, reqGrafanaAdmin)
@@ -132,14 +132,14 @@ func Register(r *macaron.Macaron) {
 		// auth api keys
 		r.Group("/auth/keys", func() {
 			r.Get("/", wrap(GetApiKeys))
-			r.Post("/", quota("api_key"), bind(m.AddApiKeyCommand{}), wrap(AddApiKey))
+			r.Post("/", quota(middleware.QuotaDefApiKeys), bind(m.AddApiKeyCommand{}), wrap(AddApiKey))
 			r.Delete("/:id", wrap(DeleteApiKey))
 		}, regOrgAdmin)
 
 		// Data sources
 		r.Group("/datasources", func() {
 			r.Get("/", GetDataSources)
-			r.Post("/", quota("data_source"), bind(m.AddDataSourceCommand{}), AddDataSource)
+			r.Post("/", quota(middleware.QuotaDefDataSources), bind(m.AddDataSourceCommand{}), AddDataSource)
 			r.Put("/:id", bind(m.UpdateDataSourceCommand{}), UpdateDataSource)
 			r.Delete("/:id", DeleteDataSource)
 			r.Get("/:id", GetDataSourceById)
@@ -153,7 +153,7 @@ func Register(r *macaron.Macaron) {
 		// Dashboard
 		r.Group("/dashboards", func() {
 			r.Combo("/db/:slug").Get(GetDashboard).Delete(DeleteDashboard)
-			r.Post("/db", reqEditorRole, bind(m.SaveDashboardCommand{}), PostDashboard)
+			r.Post("/db", reqEditorRole, bind(m.SaveDashboardCommand{}), wrap(PostDashboard))
 			r.Get("/file/:file", GetDashboardFromJsonFile)
 			r.Get("/home", GetHomeDashboard)
 			r.Get("/tags", GetDashboardTags)

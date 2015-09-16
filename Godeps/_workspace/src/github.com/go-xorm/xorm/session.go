@@ -981,6 +981,7 @@ func (session *Session) Get(bean interface{}) (bool, error) {
 		if cacher := session.Engine.getCacher2(session.Statement.RefTable); cacher != nil &&
 			session.Statement.UseCache &&
 			!session.Statement.unscoped {
+			u
 			has, err := session.cacheGet(bean, sqlStr, args...)
 			if err != ErrCacheFailed {
 				return has, err

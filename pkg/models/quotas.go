@@ -7,14 +7,6 @@ import (
 
 var ErrInvalidQuotaTarget = errors.New("Invalid quota target")
 
-type QuotaScope string
-
-const (
-	QuotaScopeGlobal QuotaScope = "global"
-	QuotaScopeOrg    QuotaScope = "org"
-	QuotaScopeUser   QuotaScope = "user"
-)
-
 type Quota struct {
 	Id      int64
 	OrgId   int64
@@ -24,19 +16,6 @@ type Quota struct {
 	Created time.Time
 	Updated time.Time
 }
-
-// type QuotaScope struct {
-// 	Name         string
-// 	Target       string
-// 	DefaultLimit int64
-// }
-//
-// type OrgQuotaDTO struct {
-// 	OrgId  int64  `json:"org_id"`
-// 	Target string `json:"target"`
-// 	Limit  int64  `json:"limit"`
-// 	Used   int64  `json:"used"`
-// }
 
 type QuotaDTO struct {
 	OrgId  int64  `json:"org_id"`
@@ -57,7 +36,6 @@ type IsQuotaReachedQuery struct {
 	Target string
 	OrgId  int64
 	UserId int64
-	Limit  int64
 
 	Result bool
 }

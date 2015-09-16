@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -83,43 +84,44 @@ func DeleteDashboard(c *middleware.Context) {
 	c.JSON(200, resp)
 }
 
-func PostDashboard(c *middleware.Context, cmd m.SaveDashboardCommand) {
+func CheckQuota(c *middleware.Context, quotaDef *middleware.QuotaDef) Response {
+	limitReached, err := middleware.QuotaReached(c, quotaDef)
+	if err != nil {
+		return ApiError(500, "Failed to check quota", err)
+	}
+	if limitReached {
+		return ApiError(403, fmt.Sprintf("%s Quota reached", quotaDef.Name), err)
+	}
+	return nil
+}
+
+func PostDashboard(c *middleware.Context, cmd m.SaveDashboardCommand) Response {
 	cmd.OrgId = c.OrgId
 
 	dash := cmd.GetDashboardModel()
 	if dash.Id == 0 {
-		limitReached, err := middleware.QuotaReached(c, "dashboard")
-		if err != nil {
-			c.JsonApiErr(500, "failed to get quota", err)
-			return
-		}
-		if limitReached {
-			c.JsonApiErr(403, "Quota reached", nil)
-			return
+		if resp := CheckQuota(c, middleware.QuotaDefDashboards); resp != nil {
+			return resp
 		}
 	}
 
 	err := bus.Dispatch(&cmd)
 	if err != nil {
 		if err == m.ErrDashboardWithSameNameExists {
-			c.JSON(412, util.DynMap{"status": "name-exists", "message": err.Error()})
-			return
+			return Json(412, util.DynMap{"status": "name-exists", "message": err.Error()})
 		}
 		if err == m.ErrDashboardVersionMismatch {
-			c.JSON(412, util.DynMap{"status": "version-mismatch", "message": err.Error()})
-			return
+			return Json(412, util.DynMap{"status": "version-mismatch", "message": err.Error()})
 		}
 		if err == m.ErrDashboardNotFound {
-			c.JSON(404, util.DynMap{"status": "not-found", "message": err.Error()})
-			return
+			return Json(404, util.DynMap{"status": "not-found", "message": err.Error()})
 		}
-		c.JsonApiErr(500, "Failed to save dashboard", err)
-		return
+		return ApiError(500, "Failed to save dashboard", err)
 	}
 
 	metrics.M_Api_Dashboard_Post.Inc(1)
 
-	c.JSON(200, util.DynMap{"status": "success", "slug": cmd.Result.Slug, "version": cmd.Result.Version})
+	return Json(200, util.DynMap{"status": "success", "slug": cmd.Result.Slug, "version": cmd.Result.Version})
 }
 
 func GetHomeDashboard(c *middleware.Context) {
