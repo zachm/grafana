@@ -1,61 +1,57 @@
 package api
 
-// func GetOrgQuotas(c *middleware.Context) Response {
-// 	if !setting.Quota.Enabled {
-// 		return ApiError(404, "Quotas not enabled", nil)
-// 	}
-// 	query := m.GetOrgQuotasQuery{OrgId: c.ParamsInt64(":orgId")}
-//
-// 	if err := bus.Dispatch(&query); err != nil {
-// 		return ApiError(500, "Failed to get org quotas", err)
-// 	}
-//
-// 	return Json(200, query.Result)
-// }
-//
-// func UpdateOrgQuota(c *middleware.Context, cmd m.UpdateOrgQuotaCmd) Response {
-// 	if !setting.Quota.Enabled {
-// 		return ApiError(404, "Quotas not enabled", nil)
-// 	}
-// 	cmd.OrgId = c.ParamsInt64(":orgId")
-// 	cmd.Target = c.Params(":target")
-//
-// 	if _, ok := setting.Quota.Org.ToMap()[cmd.Target]; !ok {
-// 		return ApiError(404, "Invalid quota target", nil)
-// 	}
-//
-// 	if err := bus.Dispatch(&cmd); err != nil {
-// 		return ApiError(500, "Failed to update org quotas", err)
-// 	}
-// 	return ApiSuccess("Organization quota updated")
-// }
-//
-// func GetUserQuotas(c *middleware.Context) Response {
-// 	if !setting.Quota.Enabled {
-// 		return ApiError(404, "Quotas not enabled", nil)
-// 	}
-// 	query := m.GetUserQuotasQuery{UserId: c.ParamsInt64(":id")}
-//
-// 	if err := bus.Dispatch(&query); err != nil {
-// 		return ApiError(500, "Failed to get org quotas", err)
-// 	}
-//
-// 	return Json(200, query.Result)
-// }
-//
-// func UpdateUserQuota(c *middleware.Context, cmd m.UpdateUserQuotaCmd) Response {
-// 	if !setting.Quota.Enabled {
-// 		return ApiError(404, "Quotas not enabled", nil)
-// 	}
-// 	cmd.UserId = c.ParamsInt64(":id")
-// 	cmd.Target = c.Params(":target")
-//
-// 	if _, ok := setting.Quota.User.ToMap()[cmd.Target]; !ok {
-// 		return ApiError(404, "Invalid quota target", nil)
-// 	}
-//
-// 	if err := bus.Dispatch(&cmd); err != nil {
-// 		return ApiError(500, "Failed to update org quotas", err)
-// 	}
-// 	return ApiSuccess("Organization quota updated")
-// }
+import (
+	"github.com/grafana/grafana/pkg/api/dtos"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/middleware"
+	m "github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/setting"
+)
+
+func AdminGetQuotas(c *middleware.Context) Response {
+	if !setting.Quota.Enabled {
+		return ApiError(404, "Quotas not enabled", nil)
+	}
+
+	query := m.GetQuotasQuery{
+		UserId: c.QueryInt64("userId"),
+		OrgId:  c.QueryInt64("orgId"),
+	}
+
+	if err := bus.Dispatch(&query); err != nil {
+		return ApiError(500, "Failed to get org quotas", err)
+	}
+
+	result := make([]*dtos.QuotaInfo, 0)
+	for _, quota := range query.Result {
+		result = append(result, &dtos.QuotaInfo{
+			Id:     quota.Id,
+			Target: quota.Target,
+			UserId: quota.UserId,
+			OrgId:  quota.OrgId,
+			Limit:  quota.Limit,
+		})
+	}
+
+	return Json(200, result)
+}
+
+// POST /api/admin/quotas/
+func AdminAddQuota(c *middleware.Context, cmd m.AddQuotaCommand) Response {
+	if err := bus.Dispatch(&cmd); err != nil {
+		return ApiError(500, "Failed to updated org quota", err)
+	}
+
+	return ApiSuccess("Quota Added")
+}
+
+// DELETE /api/admin/quotas/
+func AdminRemoveQuota(c *middleware.Context) Response {
+	cmd := m.RemoveQuotaCommand{Id: c.ParamsInt64(":id")}
+
+	if err := bus.Dispatch(&cmd); err != nil {
+		return ApiError(500, "Failed to updated org quota", err)
+	}
+
+	return ApiSuccess("Quota Removed")
+}

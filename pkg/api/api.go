@@ -21,7 +21,7 @@ func Register(r *macaron.Macaron) {
 	r.Get("/", reqSignedIn, Index)
 	r.Get("/logout", Logout)
 	r.Post("/login", quota(middleware.QuotaDefSessions), bind(dtos.LoginCommand{}), wrap(LoginPost))
-	r.Get("/login/:name", quota(middleware.QuotaDefSessions), OAuthLogin)
+	r.Get("/login/:name", quota(middleware.QuotaDefSessions), wrap(OAuthLogin))
 	r.Get("/login", LoginView)
 	r.Get("/invite/:code", Index)
 
@@ -169,6 +169,11 @@ func Register(r *macaron.Macaron) {
 
 	// admin api
 	r.Group("/api/admin", func() {
+		// quotas
+		r.Get("/quotas/", wrap(AdminGetQuotas))
+		r.Post("/quotas", bind(m.AddQuotaCommand{}), wrap(AdminAddQuota))
+		r.Delete("/quotas/:id", bind(m.RemoveQuotaCommand{}), wrap(AdminRemoveQuota))
+
 		r.Get("/settings", AdminGetSettings)
 		r.Post("/users", bind(dtos.AdminCreateUserForm{}), AdminCreateUser)
 		r.Put("/users/:id/password", bind(dtos.AdminUpdateUserPasswordForm{}), AdminUpdateUserPassword)

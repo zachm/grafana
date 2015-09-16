@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 
@@ -16,30 +15,26 @@ import (
 	"github.com/grafana/grafana/pkg/social"
 )
 
-func OAuthLogin(ctx *middleware.Context) {
+func OAuthLogin(ctx *middleware.Context) Response {
 	if setting.OAuthService == nil {
-		ctx.Handle(404, "login.OAuthLogin(oauth service not enabled)", nil)
-		return
+		return HtmlErrorView(404, "login.OAuthLogin(oauth service not enabled)", nil)
 	}
 
 	name := ctx.Params(":name")
 	connect, ok := social.SocialMap[name]
 	if !ok {
-		ctx.Handle(404, "login.OAuthLogin(social login not enabled)", errors.New(name))
-		return
+		return HtmlErrorView(404, "login.OAuthLogin(social login not enabled)", nil)
 	}
 
 	code := ctx.Query("code")
 	if code == "" {
-		ctx.Redirect(connect.AuthCodeURL("", oauth2.AccessTypeOnline))
-		return
+		return Redirect(connect.AuthCodeURL("", oauth2.AccessTypeOnline))
 	}
 
 	// handle call back
 	token, err := connect.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		ctx.Handle(500, "login.OAuthLogin(NewTransportWithCode)", err)
-		return
+		return HtmlErrorView(500, "login.OAuthLogin(NewTransportWithCode)", err)
 	}
 
 	log.Trace("login.OAuthLogin(Got token)")
@@ -47,13 +42,11 @@ func OAuthLogin(ctx *middleware.Context) {
 	userInfo, err := connect.UserInfo(token)
 	if err != nil {
 		if err == social.ErrMissingTeamMembership {
-			ctx.Redirect(setting.AppSubUrl + "/login?failedMsg=" + url.QueryEscape("Required Github team membership not fulfilled"))
+			return Redirect("/login?failedMsg=" + url.QueryEscape("Required Github team membership not fulfilled"))
 		} else if err == social.ErrMissingOrganizationMembership {
-			ctx.Redirect(setting.AppSubUrl + "/login?failedMsg=" + url.QueryEscape("Required Github organization membership not fulfilled"))
-		} else {
-			ctx.Handle(500, fmt.Sprintf("login.OAuthLogin(get info from %s)", name), err)
+			return Redirect("/login?failedMsg=" + url.QueryEscape("Required Github organization membership not fulfilled"))
 		}
-		return
+		return HtmlErrorView(500, fmt.Sprintf("login.OAuthLogin(get info from %s)", name), err)
 	}
 
 	log.Trace("login.OAuthLogin(social login): %s", userInfo)
@@ -61,8 +54,7 @@ func OAuthLogin(ctx *middleware.Context) {
 	// validate that the email is allowed to login to grafana
 	if !connect.IsEmailAllowed(userInfo.Email) {
 		log.Info("OAuth login attempt with unallowed email, %s", userInfo.Email)
-		ctx.Redirect(setting.AppSubUrl + "/login?failedMsg=" + url.QueryEscape("Required email domain not fulfilled"))
-		return
+		return Redirect("/login?failedMsg=" + url.QueryEscape("Required email domain not fulfilled"))
 	}
 
 	userQuery := m.GetUserByLoginQuery{LoginOrEmail: userInfo.Email}
@@ -71,8 +63,11 @@ func OAuthLogin(ctx *middleware.Context) {
 	// create account if missing
 	if err == m.ErrUserNotFound {
 		if !connect.IsSignupAllowed() {
-			ctx.Redirect(setting.AppSubUrl + "/login")
-			return
+			return Redirect("/login?failedMsg=" + url.QueryEscape("OAuth signup is not allowed"))
+		}
+
+		if resp := CheckQuota(ctx, middleware.QuotaDefUsers); resp != nil {
+			return HtmlErrorView(403, "User Quota Reached", nil)
 		}
 		cmd := m.CreateUserCommand{
 			Login:   userInfo.Email,
@@ -81,12 +76,11 @@ func OAuthLogin(ctx *middleware.Context) {
 			Company: userInfo.Company,
 		}
 		if err = bus.Dispatch(&cmd); err != nil {
-			ctx.Handle(500, "Failed to create account", err)
-			return
+			return HtmlErrorView(500, "Failed to create account", err)
 		}
 		userQuery.Result = &cmd.Result
 	} else if err != nil {
-		ctx.Handle(500, "Unexpected error", err)
+		return HtmlErrorView(500, "Unexpected error", err)
 	}
 
 	// login
@@ -94,5 +88,5 @@ func OAuthLogin(ctx *middleware.Context) {
 
 	metrics.M_Api_Login_OAuth.Inc(1)
 
-	ctx.Redirect(setting.AppSubUrl + "/")
+	return Redirect("/")
 }

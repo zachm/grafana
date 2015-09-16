@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -82,17 +81,6 @@ func DeleteDashboard(c *middleware.Context) {
 	var resp = map[string]interface{}{"title": query.Result.Title}
 
 	c.JSON(200, resp)
-}
-
-func CheckQuota(c *middleware.Context, quotaDef *middleware.QuotaDef) Response {
-	limitReached, err := middleware.QuotaReached(c, quotaDef)
-	if err != nil {
-		return ApiError(500, "Failed to check quota", err)
-	}
-	if limitReached {
-		return ApiError(403, fmt.Sprintf("%s Quota reached", quotaDef.Name), err)
-	}
-	return nil
 }
 
 func PostDashboard(c *middleware.Context, cmd m.SaveDashboardCommand) Response {

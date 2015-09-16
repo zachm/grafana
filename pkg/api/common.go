@@ -2,7 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Unknwon/macaron"
 	"github.com/grafana/grafana/pkg/log"
@@ -17,17 +19,10 @@ var (
 )
 
 type Response interface {
-	WriteTo(out http.ResponseWriter)
-}
-
-type NormalResponse struct {
-	status int
-	body   []byte
-	header http.Header
+	Handle(c *middleware.Context)
 }
 
 func wrap(action interface{}) macaron.Handler {
-
 	return func(c *middleware.Context) {
 		var res Response
 		val, err := c.Invoke(action)
@@ -37,11 +32,18 @@ func wrap(action interface{}) macaron.Handler {
 			res = ServerError
 		}
 
-		res.WriteTo(c.Resp)
+		res.Handle(c)
 	}
 }
 
-func (r *NormalResponse) WriteTo(out http.ResponseWriter) {
+type NormalResponse struct {
+	status int
+	body   []byte
+	header http.Header
+}
+
+func (r *NormalResponse) Handle(c *middleware.Context) {
+	out := c.Resp
 	header := out.Header()
 	for k, v := range r.header {
 		header[k] = v
@@ -73,6 +75,47 @@ func ApiSuccess(message string) *NormalResponse {
 	resp := make(map[string]interface{})
 	resp["message"] = message
 	return Respond(200, resp)
+}
+
+type HtmlResponse struct {
+	status int
+	view   string
+	data   map[string]interface{}
+}
+
+func (r *HtmlResponse) Handle(c *middleware.Context) {
+	c.Data = r.data
+	c.HTML(r.status, r.view)
+}
+
+func HtmlErrorView(status int, message string, err error) *HtmlResponse {
+	r := &HtmlResponse{status: status, data: make(map[string]interface{})}
+	r.data["Title"] = message
+	r.view = "500"
+
+	if err != nil {
+		log.Error(4, "%s: %v", message, err)
+		if setting.Env != setting.PROD {
+			r.data["ErrorMsg"] = err
+		}
+	}
+
+	return r
+}
+
+type RedirectResponse struct {
+	url string
+}
+
+func (r *RedirectResponse) Handle(c *middleware.Context) {
+	c.Redirect(r.url)
+}
+
+func Redirect(url string) *RedirectResponse {
+	if strings.HasPrefix(url, "/") {
+		url = setting.AppSubUrl + url
+	}
+	return &RedirectResponse{url: url}
 }
 
 func ApiError(status int, message string, err error) *NormalResponse {
@@ -119,4 +162,15 @@ func Respond(status int, body interface{}) *NormalResponse {
 		status: status,
 		header: make(http.Header),
 	}
+}
+
+func CheckQuota(c *middleware.Context, quotaDef *middleware.QuotaDef) Response {
+	limitReached, err := middleware.QuotaReached(c, quotaDef)
+	if err != nil {
+		return ApiError(500, "Failed to check quota", err)
+	}
+	if limitReached {
+		return ApiError(403, fmt.Sprintf("%s Quota reached", quotaDef.Name), err)
+	}
+	return nil
 }

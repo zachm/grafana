@@ -93,28 +93,28 @@ func QuotaReached(c *Context, quota *QuotaDef) (bool, error) {
 	return false, nil
 }
 
-func globalQuotaCheck(c *Context, scope *QuotaScope) (bool, error) {
-	checkQuery := m.IsQuotaReachedQuery{Target: scope.Target}
-	if err := bus.Dispatch(&checkQuery); err != nil || checkQuery.Result {
+func evalQuotaQuery(query *m.GetQuotaInfoQuery) (bool, error) {
+	if err := bus.Dispatch(query); err != nil {
 		return true, err
 	}
+
+	if query.ResultLimit != -1 && query.ResultLimit <= query.ResultUsed {
+		return true, nil
+	}
+
 	return false, nil
+}
+
+func globalQuotaCheck(c *Context, scope *QuotaScope) (bool, error) {
+	return evalQuotaQuery(&m.GetQuotaInfoQuery{Target: scope.Target})
 }
 
 func orgQuotaCheck(c *Context, scope *QuotaScope) (bool, error) {
-	checkQuery := m.IsQuotaReachedQuery{Target: scope.Target, OrgId: c.OrgId}
-	if err := bus.Dispatch(&checkQuery); err != nil || checkQuery.Result {
-		return true, err
-	}
-	return false, nil
+	return evalQuotaQuery(&m.GetQuotaInfoQuery{Target: scope.Target, OrgId: c.OrgId})
 }
 
 func userQuotaCheck(c *Context, scope *QuotaScope) (bool, error) {
-	checkQuery := m.IsQuotaReachedQuery{Target: scope.Target, UserId: c.UserId}
-	if err := bus.Dispatch(&checkQuery); err != nil || checkQuery.Result {
-		return true, err
-	}
-	return false, nil
+	return evalQuotaQuery(&m.GetQuotaInfoQuery{Target: scope.Target, UserId: c.UserId})
 }
 
 func sessionQuotaCheck(c *Context, scope *QuotaScope) (bool, error) {
@@ -124,6 +124,5 @@ func sessionQuotaCheck(c *Context, scope *QuotaScope) (bool, error) {
 		log.Info(fmt.Sprintf("%d sessions active, limit is %d", usedSessions, limit))
 		return true, nil
 	}
-
 	return false, nil
 }
