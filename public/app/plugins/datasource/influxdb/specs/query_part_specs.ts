@@ -8,13 +8,13 @@ describe.only("QueryPart", () => {
     });
 
     var agg = new QueryPartModel({
-      type: 'aggregate'
+      type: 'aggregate',
       value: 'mean'
     });
 
     var derivate = new QueryPartModel({
-      type: 'transform'
-      value: 'derivate'
+      type: 'transform',
+      value: 'derivate',
       params: [{type: 'interval', options: ['1s', '10s']}]
     });
 
@@ -33,7 +33,7 @@ describe.only("QueryPart", () => {
       new QueryPart(as, 'test'),
     ];
 
-    vat text = QueryPart.renderAll(segments);
+    var text = QueryPart.renderAll(segments);
     expect(text).to.be('derivate(mean("value"), 1s) as "test"');
   });
 });
