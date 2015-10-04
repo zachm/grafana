@@ -10,6 +10,7 @@ class InfluxQuery {
   target: any;
   selectParts: any[];
   groupByParts: any;
+  aliasPart: any;
   queryBuilder: any;
 
   constructor(target) {
@@ -25,6 +26,7 @@ class InfluxQuery {
     this.groupByParts = [
       queryPart.create({name: 'time', params: ['$interval']})
     ];
+    this.aliasPart = queryPart.create({name: 'alias', params: ['$measurement']});
   }
 
   updateSelectParts() {
