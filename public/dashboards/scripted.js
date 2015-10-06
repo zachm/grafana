@@ -34,7 +34,7 @@ dashboard.title = 'Scripted dash';
 // time can be overriden in the url using from/to parameters, but this is
 // handled automatically in grafana core during dashboard initialization
 dashboard.time = {
-  from: "now-6h",
+  from: "now-1h",
   to: "now"
 };
 
